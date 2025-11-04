@@ -296,9 +296,6 @@ C_GetFunctionList(CK_FUNCTION_LIST_PTR_PTR ppFunctionList) {
 
 static void CONSTRUCTOR_FUNCTION library_constructor(void) {
     dbg_initialize();
-#ifdef INFO
-    dbg_trace("NSS adapter build info: " stringify_value(INFO));
-#endif
     SECStatus res = NSS_NoDB_Init(NULL);
     if (res != SECSuccess) {
         // NOTE: SECWouldBlock = -2, SECFailure = -1, SECSuccess = 0.

@@ -37,8 +37,4 @@ global_data_t *__get_global_data();
 #define IEK (__get_global_data()->importer_exporter_key)
 #define P11 (*(__get_global_data()->orig_funcs_list))
 
-// Other utilities
-#define stringify(x)       #x
-#define stringify_value(x) stringify(x)
-
 #endif // NSS_ADAPTER_H

@@ -16,7 +16,6 @@ STATIC_LIBS   = freebl
 CFLAGS        = -shared -fPIC -fvisibility=hidden -Wl,--exclude-libs,ALL       \
                 $(addprefix -l,$(SHARED_LIBS))                                 \
                 $(strip $(shell pkg-config --cflags $(DEVEL_PKGS)))            \
-                $(shell test -e .git && echo -n -DINFO= && git rev-parse HEAD) \
                 -Wpedantic -Wall -Wextra -Wconversion -Werror
 REL_CFLAGS    = -O3
 DBG_CFLAGS    = -Wno-error=unused-variable -Wno-error=unused-parameter -DDEBUG \
