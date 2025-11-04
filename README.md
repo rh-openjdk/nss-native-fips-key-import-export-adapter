@@ -32,6 +32,7 @@ The Makefile has support for:
 * Running the test suite (with a specified `java` executable)
     * This test suite ensures the system is in FIPS mode, and is known to work
       with _Temurin_ builds of _OpenJDK_ 8, 11, 17 and 21
+* Building a source tarball
 
 To see a help message with all the `make` targets and a brief description invoke
 `make help`.

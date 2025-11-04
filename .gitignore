@@ -1,2 +1,5 @@
 # Build output directory
 bin/
+
+# Source dist package
+nssadapter-*.tar.xz
