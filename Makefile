@@ -13,11 +13,10 @@ DEVEL_PKGS    = nss nss-softokn
 LIB_DIR       = $(shell pkg-config --variable=libdir nss-softokn)
 SHARED_LIBS   = pthread softokn3 nss3
 STATIC_LIBS   = freebl
-CFLAGS        = -shared -fPIC -fvisibility=hidden -Wl,--exclude-libs,ALL       \
+SHR_CFLAGS    = -shared -fPIC -fvisibility=hidden -Wl,--exclude-libs,ALL       \
                 $(addprefix -l,$(SHARED_LIBS))                                 \
                 $(strip $(shell pkg-config --cflags $(DEVEL_PKGS)))            \
                 -Wpedantic -Wall -Wextra -Wconversion -Werror
-REL_CFLAGS    = -O3
 DBG_CFLAGS    = -Wno-error=unused-variable -Wno-error=unused-parameter -DDEBUG \
                 -O0 -g
 
@@ -51,11 +50,11 @@ else
 endif
 
 .PHONY: release ## Build in RELEASE mode (default)
-release: CFLAGS += $(REL_CFLAGS)
+release: BLD_CFLAGS = $(SHR_CFLAGS) $(CFLAGS)
 release: $(CLEAN_IF_PREVIOUS_BUILD_MODE_IS_DEBUG) $(OUTPUT)
 
 .PHONY: debug ## Build in DEBUG mode
-debug: CFLAGS += $(DBG_CFLAGS)
+debug: BLD_CFLAGS = $(SHR_CFLAGS) $(DBG_CFLAGS) $(CFLAGS)
 debug: CREATE_DBG_SENTINEL_IF_NEEDED = touch $(DBG_SENTINEL)
 debug: $(CLEAN_IF_PREVIOUS_BUILD_MODE_IS_RELEASE) $(OUTPUT)
 
@@ -72,8 +71,8 @@ $(BIN_DIR):
 
 $(OUTPUT): $(BIN_DIR) $(SRC_FILES)
 	@$(CREATE_DBG_SENTINEL_IF_NEEDED)
-	$(CC) $(CFLAGS) $(filter %.c, $+) $(addprefix $(LIB_DIR)/lib,              \
-	                                    $(addsuffix .a,$(STATIC_LIBS))) -o $@
+	$(CC) $(BLD_CFLAGS) $(filter %.c, $+)                                      \
+	      $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBS))) -o $@
 
 
 #
