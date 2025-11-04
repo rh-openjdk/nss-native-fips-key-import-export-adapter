@@ -41,7 +41,9 @@ CLANG_FORMAT_IGNORED_FILES = $(SRC_DIR)/nss_lowkey_imported.c                  \
 # Build
 #
 
-SRC_FILES = $(sort $(wildcard $(SRC_DIR)/*.h) $(wildcard $(SRC_DIR)/*.c))
+SRC_FILES = $(sort $(wildcard $(SRC_DIR)/*))
+TST_FILES = $(sort $(wildcard $(TST_DIR)/*))
+EXTRA_FILES = README.md LICENSE Makefile
 ifeq ($(wildcard $(DBG_SENTINEL)),$(DBG_SENTINEL))
   PREVIOUS_BUILD_MODE = debug
   CLEAN_IF_PREVIOUS_BUILD_MODE_IS_DEBUG = clean
@@ -50,11 +52,11 @@ else
   CLEAN_IF_PREVIOUS_BUILD_MODE_IS_RELEASE = clean
 endif
 
-.PHONY: release ## Build in RELEASE mode (default)
+.PHONY: release ## Build the library in RELEASE mode (default)
 release: BLD_CFLAGS = $(SHR_CFLAGS) $(CFLAGS)
 release: $(CLEAN_IF_PREVIOUS_BUILD_MODE_IS_DEBUG) $(OUTPUT)
 
-.PHONY: debug ## Build in DEBUG mode
+.PHONY: debug ## Build the library in DEBUG mode
 debug: BLD_CFLAGS = $(SHR_CFLAGS) $(DBG_CFLAGS) $(CFLAGS)
 debug: CREATE_DBG_SENTINEL_IF_NEEDED = touch $(DBG_SENTINEL)
 debug: $(CLEAN_IF_PREVIOUS_BUILD_MODE_IS_RELEASE) $(OUTPUT)
@@ -74,6 +76,40 @@ $(OUTPUT): $(BIN_DIR) $(SRC_FILES)
 	@$(CREATE_DBG_SENTINEL_IF_NEEDED)
 	$(CC) $(BLD_CFLAGS) $(filter %.c, $+)                                      \
 	      $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBS))) -o $@
+
+
+DIST_FILE = $(NAME)-$(VERSION).tar.xz
+.PHONY: dist ## Build a source tarball
+dist: $(DIST_FILE)
+$(DIST_FILE): $(SRC_FILES) $(TST_FILES) $(EXTRA_FILES)
+
+.PHONY: distclean ## Remove the source tarball(s)
+distclean:
+	rm -f $(NAME)-*.tar.xz
+
+# More info in the tar manual, in "8.4 Making tar Archives More Reproducible":
+# https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
+ifneq ($(wildcard ./.git),)
+  # Use the last commit committer's timestamp. Timestamps are specified with @:
+  # https://www.gnu.org/software/tar/manual/html_section/Date-input-formats.html
+  SOURCE_EPOCH = $(shell git log -1 --format=tformat:@%ct)
+else
+  # Not in a git repository, fall-back to this file's mtime, please note that
+  # this reproduces the same tarball from an extracted tarball. We can directly
+  # pass a file path to --mtime as long as it starts with '/' or '.':
+  # https://www.gnu.org/software/tar/manual/html_section/create-options.html
+  SOURCE_EPOCH = $(shell realpath $(lastword $(MAKEFILE_LIST)))
+endif
+TARFLAGS = --sort=name --format=posix --mtime=$(SOURCE_EPOCH)                  \
+           --pax-option=exthdr.name=%d/PaxHeaders/%f                           \
+           --pax-option=delete=atime,delete=ctime                              \
+           --numeric-owner --owner=0 --group=0 --mode=go+u,go-w
+%.tar.xz:
+	@rm --recursive --force dist-tmp # Hard-code to prevent accidents
+	@mkdir --parents dist-tmp/$*
+	cp --parents $^ dist-tmp/$*
+	LC_ALL=C tar --create --xz --file=$@ --directory=dist-tmp $(TARFLAGS) $*
+	@rm --recursive --force dist-tmp
 
 
 #
