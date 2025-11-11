@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0-or-later WITH Classpath-exception-2.0
+
+This directory mocks the Linux Kernel Cryptographic API files, so that the
+container sees as if the Kernel has been booted with fips=1. Of course this
+isn't a valid FIPS setup, but it allows testing the whole userspace portion of
+the FIPS mode software stack (of which we are particularly interested in NSS).
+
+NOTE: on Debian or Fedora we can do this at the /proc/sys/crypto level, but
+it looks like Ubuntu's Kernel removes the Cryptographic API (presumably to
+reintroduce it only for Ubuntu Pro), so we need to hook at the /proc/sys
+level (which is dirtier but it's working).

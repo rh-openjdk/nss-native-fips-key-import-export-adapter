@@ -1,21 +1,26 @@
+# SPDX-License-Identifier: GPL-2.0-or-later WITH Classpath-exception-2.0
 name: Build & test
-run-name: Build & test @${{ github.actor }}'s ${{ github.event_name }} to ${{ github.ref_name }}
+run-name: Build & test @${{ github.actor }}'s ${{ github.event_name }} (${{ github.head_ref || github.ref_name }})
 on: [ push, pull_request ]
 jobs:
   main:
-    name: Build & test (c${{ matrix.centos_version }}s, jdk${{ matrix.jdk_version }}u)
-    runs-on: ubuntu-latest
+    name: Build & test (${{ matrix.arch }}, c${{ matrix.centos_version }}s, jdk${{ matrix.jdk_version }}u)
+    runs-on: ${{ fromJson('{"x64":"ubuntu-latest","arm64":"ubuntu-24.04-arm"}')[matrix.arch] }}
+
     strategy:
       matrix:
+        arch: [ x64, arm64 ]
         centos_version: [ 9, 10 ]
         jdk_version: [ 25, 21, 17, 11, 8 ]
 
     env:
-      MAIN_SCRIPT: .github/workflows/build_and_test.sh
+      CENTOS_VERSION: ${{ matrix.centos_version }}
+      JDK_VERSION: ${{ matrix.jdk_version }}
 
     steps:
       - name: Check out ${{ github.ref_name }}@${{ github.sha }}
         uses: actions/checkout@v5
 
-      - name: Run ${{ env.MAIN_SCRIPT }}
-        run: ${{ github.workspace }}/${{ env.MAIN_SCRIPT }} ${{ matrix.centos_version }} ${{ matrix.jdk_version }}
+      - name: Run containerized testing workflow
+        working-directory: ${{ github.workspace }}
+        run: make test

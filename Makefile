@@ -136,6 +136,12 @@ info: $(PREVIOUS_BUILD_MODE)
 ifndef JAVA_HOME
   JAVA_HOME = $(realpath $(dir $(realpath $(shell command -v javac)))..)
 endif
+ifndef CENTOS_VERSION
+  CENTOS_VERSION = 9
+endif
+ifndef JDK_VERSION
+  JDK_VERSION = 21
+endif
 .PHONY: -test
 -test:
 	$(JAVA_HOME)/bin/javac -d $(BIN_DIR) $(TST_DIR)/Main.java
@@ -148,6 +154,10 @@ test-exec: $(PREVIOUS_BUILD_MODE) -test
 .PHONY: test-data ## Locally run the test suite in data generation mode, parameters: [JAVA_HOME]
 test-data: TEST_ARGUMENT = --data-generation
 test-data: -test
+
+.PHONY: test ## Run the test suite inside a CentOS Stream container, parameters: [CENTOS_VERSION] [JDK_VERSION]
+test:
+	@bash $(TST_DIR)/containerized_test.sh $(CENTOS_VERSION) $(JDK_VERSION)
 
 .PHONY: help ## Display this message
 help:
