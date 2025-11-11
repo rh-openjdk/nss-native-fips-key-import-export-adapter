@@ -8,7 +8,6 @@ BIN_DIR      := bin
 OUTPUT       := $(BIN_DIR)/lib$(NAME).so
 DBG_SENTINEL := $(BIN_DIR)/_built_in_debug_mode_
 
-JAVA          = java
 CC            = gcc
 DEVEL_PKGS    = nss nss-softokn
 LIB_DIR       = $(shell pkg-config --variable=libdir nss-softokn)
@@ -98,7 +97,7 @@ else
   # this reproduces the same tarball from an extracted tarball. We can directly
   # pass a file path to --mtime as long as it starts with '/' or '.':
   # https://www.gnu.org/software/tar/manual/html_section/create-options.html
-  SOURCE_EPOCH = $(shell realpath $(lastword $(MAKEFILE_LIST)))
+  SOURCE_EPOCH = $(realpath $(lastword $(MAKEFILE_LIST)))
 endif
 TARFLAGS = --sort=name --format=posix --mtime=$(SOURCE_EPOCH)                  \
            --pax-option=exthdr.name=%d/PaxHeaders/%f                           \
@@ -134,16 +133,19 @@ info: $(PREVIOUS_BUILD_MODE)
 	nm --dynamic --radix=x $(OUTPUT)
 	@echo
 
+ifndef JAVA_HOME
+  JAVA_HOME = $(realpath $(dir $(realpath $(shell command -v javac)))..)
+endif
 .PHONY: -test
 -test:
-	$(JAVA)c -d $(BIN_DIR) $(TST_DIR)/Main.java
-	$(JAVA) -cp $(BIN_DIR) Main $(TEST_ARGUMENT)
+	$(JAVA_HOME)/bin/javac -d $(BIN_DIR) $(TST_DIR)/Main.java
+	$(JAVA_HOME)/bin/java -cp $(BIN_DIR) Main $(TEST_ARGUMENT)
 
-.PHONY: test ## Run the test suite, usage: make test [JAVA=/path/to/java]
+.PHONY: test ## Run the test suite, parameters: [JAVA_HOME]
 test: TEST_ARGUMENT = $(OUTPUT)
 test: $(PREVIOUS_BUILD_MODE) -test
 
-.PHONY: test-data ## Run the test suite in data generation mode (honours JAVA)
+.PHONY: test-data ## Run the test suite in data generation mode, parameters: [JAVA_HOME]
 test-data: TEST_ARGUMENT = --data-generation
 test-data: -test
 
