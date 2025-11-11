@@ -40,8 +40,8 @@ CLANG_FORMAT_IGNORED_FILES = $(SRC_DIR)/nss_lowkey_imported.c                  \
 # Build
 #
 
-SRC_FILES = $(sort $(wildcard $(SRC_DIR)/*))
-TST_FILES = $(sort $(wildcard $(TST_DIR)/*))
+SRC_FILES = $(sort $(shell find $(SRC_DIR) -type f))
+TST_FILES = $(sort $(shell find $(TST_DIR) -type f))
 EXTRA_FILES = README.md LICENSE Makefile
 ifeq ($(wildcard $(DBG_SENTINEL)),$(DBG_SENTINEL))
   PREVIOUS_BUILD_MODE = debug
@@ -141,11 +141,11 @@ endif
 	$(JAVA_HOME)/bin/javac -d $(BIN_DIR) $(TST_DIR)/Main.java
 	$(JAVA_HOME)/bin/java -cp $(BIN_DIR) Main $(TEST_ARGUMENT)
 
-.PHONY: test ## Run the test suite, parameters: [JAVA_HOME]
-test: TEST_ARGUMENT = $(OUTPUT)
-test: $(PREVIOUS_BUILD_MODE) -test
+.PHONY: test-exec ## Locally run the test suite (system must be in FIPS mode), parameters: [JAVA_HOME]
+test-exec: TEST_ARGUMENT = $(OUTPUT)
+test-exec: $(PREVIOUS_BUILD_MODE) -test
 
-.PHONY: test-data ## Run the test suite in data generation mode, parameters: [JAVA_HOME]
+.PHONY: test-data ## Locally run the test suite in data generation mode, parameters: [JAVA_HOME]
 test-data: TEST_ARGUMENT = --data-generation
 test-data: -test
 
