@@ -29,14 +29,13 @@ The Makefile has support for:
 * Formatting the C code (with `clang-format`)
 * Building, rebuilding and cleaning (RELEASE and DEBUG modes)
 * Showing built library information (such as linkage and symbols)
-* Running the test suite (with a specified `java` executable)
+* Running the test suite (in different modes, including a containerized test)
     * This test suite ensures the system is in FIPS mode, and is known to work
-      with _Temurin_ builds of _OpenJDK_ 8, 11, 17 and 21
+      with _Temurin_ builds of _OpenJDK_ 8, 11, 17, 21 and 25
 * Building a source tarball
 
 To see a help message with all the `make` targets and a brief description invoke
 `make help`.
-
 
 ## Debugging traces
 
@@ -57,6 +56,20 @@ as follows:
     * The file is opened in append mode
     * If an error occurs while opening the file, the error is logged to `stderr`
       and debug traces are disabled
+
+Some debug messages print PKCS&nbsp;#&#8203;11 constants in a format that allows
+quickly searching them once the text is copied to the clipboard. For example,
+with the clipboard containing `CKA_.*0x00000170`, execute:
+
+```bash
+grep -irE "^\s*#define\s+$(xclip -sel clip)" /usr/include
+```
+
+This reveals that it was the `CKA_MODIFIABLE` constant:
+
+```
+/usr/include/nss3/pkcs11t.h:#define CKA_MODIFIABLE 0x00000170UL
+```
 
 When the library is built in DEBUG mode, sensitive PKCS&nbsp;#&#8203;11
 attribute values are logged, i.e. plain keys! When the library is built in
