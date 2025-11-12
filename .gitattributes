@@ -1,0 +1,2 @@
+# Make GitHub releases automatic source archives empty
+* export-ignore

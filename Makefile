@@ -159,6 +159,14 @@ test-data: -test
 test:
 	@bash $(TST_DIR)/containerized_test.sh $(CENTOS_VERSION) $(JDK_VERSION)
 
+.PHONY: github-release ## Create a release tag for the current VERSION and publish it to GitHub, parameters: [REMOTE_NAME]
+ifndef REMOTE_NAME
+  REMOTE_NAME = origin
+endif
+github-release: $(DIST_FILE)
+	@bash .github/tag_and_upload_release.sh                                    \
+	  "$(NAME)" "$(VERSION)" "$(REMOTE_NAME)" "$(DIST_FILE)"
+
 .PHONY: help ## Display this message
 help:
 	@echo '$(shell tput bold)Available make targets:$(shell tput sgr0)'
