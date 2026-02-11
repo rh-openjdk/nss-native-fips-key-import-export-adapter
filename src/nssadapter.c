@@ -16,10 +16,10 @@
 // plain.
 static CK_BYTE iv[] = {0xa1, 0xe9, 0xe1, 0x95, 0xbf, 0x11, 0x6c, 0xca,
                        0xef, 0xa5, 0x56, 0x5e, 0xdd, 0xfc, 0xdc, 0x8c};
+static CK_SESSION_HANDLE iek_session = CK_INVALID_HANDLE;
 static global_data_t global_data = {
     .orig_funcs_list = NULL,
-    .importer_exporter_key = {.session = CK_INVALID_HANDLE,
-                              .id = CK_INVALID_HANDLE,
+    .importer_exporter_key = {.id = CK_INVALID_HANDLE,
                               .mech = {CKM_AES_CBC_PAD, &iv, sizeof(iv)}},
 };
 
@@ -116,10 +116,10 @@ static CK_RV initialize_importer_exporter() {
 
     // Create importer / exporter session.
     CK_RV ret = P11.C_OpenSession(FIPS_SLOT_ID, CKF_SERIAL_SESSION, NULL, NULL,
-                                  &IEK.session);
+                                  &iek_session);
     dbg_trace("Called C_OpenSession() to create the session for the "
-              "import / export key\n  IEK.session = 0x%08lx, ret = " CKR_FMT,
-              IEK.session, ret);
+              "import / export key\n  iek_session = 0x%08lx, ret = " CKR_FMT,
+              iek_session, ret);
     if (ret != CKR_OK) {
         return ret;
     }
@@ -134,7 +134,7 @@ static CK_RV initialize_importer_exporter() {
         {CKA_CLASS,     &keyClass, sizeof(keyClass)},
         {CKA_VALUE_LEN, &keyLen,   sizeof(keyLen)  },
     };
-    ret = P11.C_GenerateKey(IEK.session, mechanisms, attributes,
+    ret = P11.C_GenerateKey(iek_session, mechanisms, attributes,
                             attrs_count(attributes), &IEK.id);
     dbg_trace("Called C_GenerateKey() to create the import / export key\n  "
               "IEK.id = %lu, ret = " CKR_FMT,
@@ -306,8 +306,8 @@ static void CONSTRUCTOR_FUNCTION library_constructor(void) {
 
 static void DESTRUCTOR_FUNCTION library_destructor(void) {
     // Destroy import / export key, if created.
-    if (IEK.session != CK_INVALID_HANDLE) {
-        P11.C_CloseSession(IEK.session);
+    if (iek_session != CK_INVALID_HANDLE) {
+        P11.C_CloseSession(iek_session);
     }
     dbg_finalize();
 }

@@ -267,13 +267,13 @@ CK_RV import_key(CK_OBJECT_CLASS key_class, CK_KEY_TYPE key_type,
     }
 
     // Encrypt.
-    ret = P11.C_EncryptInit(IEK.session, &IEK.mech, IEK.id);
+    ret = P11.C_EncryptInit(session, &IEK.mech, IEK.id);
     if (ret != CKR_OK) {
         dbg_trace("C_EncryptInit has failed with ret = " CKR_FMT, ret);
         return_with_cleanup(CKR_GENERAL_ERROR);
     }
     p11_call_with_allocation(P11.C_Encrypt, encrypted_key, encrypted_key_len,
-                             IEK.session, encoded_key_item.data,
+                             session, encoded_key_item.data,
                              encoded_key_item.len);
     dbg_trace("Called C_Encrypt() to import the key\n  "
               "encoded_key_item.len = %u, encrypted_key_len = %lu, "

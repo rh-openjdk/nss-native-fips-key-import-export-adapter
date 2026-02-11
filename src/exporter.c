@@ -183,6 +183,7 @@ cleanup:
 }
 
 static CK_RV export_and_store_key(key_data_t *key_data,
+                                  CK_SESSION_HANDLE session,
                                   CK_OBJECT_HANDLE key_id) {
     if (cached_sensitive_attrs_key_id != CK_INVALID_HANDLE) {
         // This should never happen because OpenJDK follows the "Conventions
@@ -202,7 +203,7 @@ static CK_RV export_and_store_key(key_data_t *key_data,
 
     // Wrap.
     p11_call_with_allocation(P11.C_WrapKey, encrypted_key, encrypted_key_len,
-                             IEK.session, &IEK.mech, IEK.id, key_id);
+                             session, &IEK.mech, IEK.id, key_id);
     dbg_trace("Called C_WrapKey() to export the key\n  "
               "encrypted_key_len = %lu, ret = " CKR_FMT,
               encrypted_key_len, ret);
@@ -211,13 +212,13 @@ static CK_RV export_and_store_key(key_data_t *key_data,
     }
 
     // Decrypt.
-    ret = P11.C_DecryptInit(IEK.session, &IEK.mech, IEK.id);
+    ret = P11.C_DecryptInit(session, &IEK.mech, IEK.id);
     if (ret != CKR_OK) {
         dbg_trace("C_DecryptInit has failed with ret = " CKR_FMT, ret);
         return_with_cleanup(CKR_GENERAL_ERROR);
     }
     p11_call_with_allocation(P11.C_Decrypt, encoded_key, encoded_key_len,
-                             IEK.session, encrypted_key, encrypted_key_len);
+                             session, encrypted_key, encrypted_key_len);
     dbg_trace("Called C_Decrypt() to export the key\n  encoded_key_len = %lu, "
               "ret = " CKR_FMT,
               encoded_key_len, ret);
@@ -308,7 +309,7 @@ CK_RV export_key(key_data_t *key_data, CK_SESSION_HANDLE session,
             cached_attr_slot = get_sensitive_cached_attr(attributes[n].type);
             if (cached_attr_slot != NULL) {
                 if (cached_sensitive_attrs_key_id != key_id) {
-                    ret = export_and_store_key(key_data, key_id);
+                    ret = export_and_store_key(key_data, session, key_id);
                     if (ret != CKR_OK) {
                         return_with_cleanup(ret);
                     }

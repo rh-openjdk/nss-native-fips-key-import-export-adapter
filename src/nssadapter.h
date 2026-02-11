@@ -22,13 +22,11 @@ typedef struct {
     // long as it contains all the functions we need.
     CK_FUNCTION_LIST_PTR orig_funcs_list; // aliased &P11
 
-    // The following session, key, and mechanism, are used to import and export
-    // sensitive keys by means of the C_WrapKey() and C_UnwrapKey() PKCS #11
-    // APIs.
+    // The following key and mechanism are used to import and export sensitive
+    // keys by means of the C_WrapKey() and C_UnwrapKey() PKCS #11 APIs.
     struct {
-        CK_SESSION_HANDLE session; // aliased IEK.session
-        CK_OBJECT_HANDLE id;       // aliased IEK.id
-        CK_MECHANISM mech;         // aliased IEK.mech
+        CK_OBJECT_HANDLE id; // aliased IEK.id
+        CK_MECHANISM mech;   // aliased IEK.mech
     } importer_exporter_key;
 } global_data_t;
 
