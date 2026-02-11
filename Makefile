@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later WITH Classpath-exception-2.0
 
 NAME         := nssadapter
-VERSION      := 0.1.0
+VERSION      := 0.1.1
 SRC_DIR      := src
 TST_DIR      := test
 BIN_DIR      := bin
