@@ -4,10 +4,10 @@
 set -e
 
 if [ $# -ne 4 ]; then
-    echo "Usage: ${0} NAME VERSION REMOTE_NAME DIST_FILE" 1>&2
+    echo "Usage: ${0} NAME_VER VERSION REMOTE_NAME DIST_FILE" 1>&2
     exit 1
 fi
-NAME="${1}"
+NAME_VER="${1}"
 VERSION="${2}"
 REMOTE_NAME="${3}"
 DIST_FILE="${4}"
@@ -17,8 +17,7 @@ if [ "$(git status --porcelain | wc -l)" -ne 0 ]; then
     echo "will not tag: the working tree must be clean" 1>&2
     exit 2
 fi
-release_name="${NAME} v${VERSION}"
-git tag -s "${VERSION}" -m "${release_name}"
+git tag -s "${VERSION}" -m "${NAME_VER}"
 git push "${REMOTE_NAME}" tag "${VERSION}"
 
 # Obtain GitHub data required to use the REST API
@@ -51,7 +50,7 @@ data="$(
     cat <<-EOF
 	{
 	  "tag_name": "${VERSION}",
-	  "name": "${release_name}",
+	  "name": "${NAME_VER}",
 	  "body": "${body}"
 	}
 	EOF

@@ -2,6 +2,7 @@
 
 NAME         := nssadapter
 VERSION      := 0.1.1
+NAME_VER     := $(NAME) v$(VERSION)
 SRC_DIR      := src
 TST_DIR      := test
 BIN_DIR      := bin
@@ -14,7 +15,7 @@ LIB_DIR       = $(shell pkg-config --variable=libdir nss-softokn)
 SHARED_LIBS   = pthread softokn3 nss3
 STATIC_LIBS   = freebl
 SHR_CFLAGS    = -shared -fPIC -fvisibility=hidden -Wl,--exclude-libs,ALL       \
-                $(addprefix -l,$(SHARED_LIBS))                                 \
+                -DNAME_VER='"$(NAME_VER)"' $(addprefix -l,$(SHARED_LIBS))      \
                 $(strip $(shell pkg-config --cflags $(DEVEL_PKGS)))            \
                 -Wpedantic -Wall -Wextra -Wconversion -Werror
 DBG_CFLAGS    = -Wno-error=unused-variable -Wno-error=unused-parameter -DDEBUG \
@@ -165,7 +166,7 @@ ifndef REMOTE_NAME
 endif
 github-release: $(DIST_FILE)
 	@bash .github/tag_and_upload_release.sh                                    \
-	  "$(NAME)" "$(VERSION)" "$(REMOTE_NAME)" "$(DIST_FILE)"
+	  "$(NAME_VER)" "$(VERSION)" "$(REMOTE_NAME)" "$(DIST_FILE)"
 
 .PHONY: help ## Display this message
 help:

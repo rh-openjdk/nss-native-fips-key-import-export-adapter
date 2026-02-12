@@ -61,6 +61,7 @@ void dbg_initialize() {
     if (dbg_file == NULL) {
         dbg_file = stderr;
     }
+    dbg_trace(NAME_VER);
 }
 
 inline bool dbg_is_enabled() {
