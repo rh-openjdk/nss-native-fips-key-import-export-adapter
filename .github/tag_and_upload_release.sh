@@ -13,7 +13,7 @@ REMOTE_NAME="${3}"
 DIST_FILE="${4}"
 
 # Tag the current version and push the tag
-if [ "$(git status --porcelain | wc -l)" -ne 0 ]; then
+if [ -n "$(git status --porcelain)" ]; then
     echo "will not tag: the working tree must be clean" 1>&2
     exit 2
 fi
@@ -21,9 +21,7 @@ git tag -s "${VERSION}" -m "${NAME_VER}"
 git push "${REMOTE_NAME}" tag "${VERSION}"
 
 # Obtain GitHub data required to use the REST API
-gh_token="$(echo -e 'protocol=https\nhost=github.com' |
-    /usr/libexec/git-core/git-credential-libsecret get |
-    sed -n s/password=//p)"
+gh_token="$(secret-tool lookup protocol https server github.com)"
 if [ -z "${gh_token}" ]; then
     echo "could not get the GitHub token" 1>&2
     exit 3
@@ -34,8 +32,8 @@ if [ -z "${remote_url}" ]; then
     echo "could not get the git remote url for ${REMOTE_NAME}" 1>&2
     exit 4
 fi
-owner="$(echo "${remote_url%*.git}" | tr / '\n' | tail -2 | head -1)"
-repo="$(echo "${remote_url%*.git}" | tr / '\n' | tail -1)"
+owner="$(basename "$(dirname "${remote_url}")")"
+repo="$(basename "${remote_url}" .git)"
 
 # Publish GitHub release
 COMMON_HEADERS=(
