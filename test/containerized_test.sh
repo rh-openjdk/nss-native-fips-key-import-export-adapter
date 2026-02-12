@@ -113,7 +113,7 @@ function containerized_run() {
     local failed
 
     group "Build"
-    make release
+    make clean release
     endgroup
 
     group "Download Adoptium Temurin JDK ${JDK_VERSION}"
