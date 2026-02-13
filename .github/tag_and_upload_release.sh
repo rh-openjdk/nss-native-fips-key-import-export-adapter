@@ -12,21 +12,16 @@ VERSION="${2}"
 REMOTE_NAME="${3}"
 DIST_FILE="${4}"
 
-# Tag the current version and push the tag
+# Check and collect the required data
 if [ -n "$(git status --porcelain)" ]; then
     echo "will not tag: the working tree must be clean" 1>&2
     exit 2
 fi
-git tag -s "${VERSION}" -m "${NAME_VER}"
-git push "${REMOTE_NAME}" tag "${VERSION}"
-
-# Obtain GitHub data required to use the REST API
 gh_token="$(secret-tool lookup protocol https server github.com)"
 if [ -z "${gh_token}" ]; then
     echo "could not get the GitHub token" 1>&2
     exit 3
 fi
-
 remote_url="$(git remote get-url "${REMOTE_NAME}")"
 if [ -z "${remote_url}" ]; then
     echo "could not get the git remote url for ${REMOTE_NAME}" 1>&2
@@ -35,7 +30,6 @@ fi
 owner="$(basename "$(dirname "${remote_url}")")"
 repo="$(basename "${remote_url}" .git)"
 
-# Publish GitHub release
 COMMON_HEADERS=(
     -L -X POST -H "Authorization: Bearer ${gh_token}"
     -H "Accept: application/vnd.github+json"
@@ -54,6 +48,10 @@ data="$(
 	EOF
 )"
 url="https://api.github.com/repos/${owner}/${repo}/releases"
+
+# Tag and publish GitHub release
+git tag -s "${VERSION}" -m "${NAME_VER}"
+git push "${REMOTE_NAME}" tag "${VERSION}"
 resp="$(curl "${COMMON_HEADERS[@]}" "${url}" --data "${data}")"
 echo "${resp}"
 
