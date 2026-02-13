@@ -29,25 +29,30 @@ if [ -z "${remote_url}" ]; then
 fi
 owner="$(basename "$(dirname "${remote_url}")")"
 repo="$(basename "${remote_url}" .git)"
+prev_version="$(git describe --abbrev=0)"
+body="
+### Contributors
 
+@franferrax, @martinuy, @fitzsim
+
+### Changelog
+
+https://github.com/${owner}/${repo}/compare/${prev_version}...${VERSION}
+
+### Notes
+
+\`${DIST_FILE}\` is the official release source, \`*.zip\` and \`*.tar.gz\` files are empty on purpose, since GitHub doesn't allow deleting them.
+"
 COMMON_HEADERS=(
     -L -X POST -H "Authorization: Bearer ${gh_token}"
     -H "Accept: application/vnd.github+json"
     -H "X-GitHub-Api-Version: 2022-11-28"
 )
-body="Note: \`${DIST_FILE}\` is the official release source, \`*.zip\`"
-body="${body} and \`*.tar.gz\` files are empty on purpose, since GitHub"
-body="${body} doesn't allow deleting them."
-data="$(
-    cat <<-EOF
-	{
-	  "tag_name": "${VERSION}",
-	  "name": "${NAME_VER}",
-	  "body": "${body}"
-	}
-	EOF
-)"
 url="https://api.github.com/repos/${owner}/${repo}/releases"
+data="$(python3 '-BIScimport json, sys
+tag_name, name, body = sys.argv[1:]
+print(json.dumps(dict(tag_name=tag_name, name=name, body=body.strip())))
+' "${VERSION}" "${NAME_VER}" "${body}")"
 
 # Tag and publish GitHub release
 git tag -s "${VERSION}" -m "${NAME_VER}"
