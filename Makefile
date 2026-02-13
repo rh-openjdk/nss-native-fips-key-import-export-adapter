@@ -93,6 +93,9 @@ ifneq ($(wildcard ./.git),)
   # Use the last commit committer's timestamp. Timestamps are specified with @:
   # https://www.gnu.org/software/tar/manual/html_section/Date-input-formats.html
   SOURCE_EPOCH = $(shell git log -1 --format=tformat:@%ct)
+  # Issue a warning when the repository contains uncommitted changes
+  _WARN_TEXT = creating a tarball with uncommitted changes (check "git status")
+  WORKTREE_WARN = $(if $(shell git status --porcelain),WARNING: $(_WARN_TEXT),)
 else
   # Not in a git repository, fall-back to this file's mtime, please note that
   # this reproduces the same tarball from an extracted tarball. We can directly
@@ -105,6 +108,8 @@ TARFLAGS = --sort=name --format=posix --mtime=$(SOURCE_EPOCH)                  \
            --pax-option=delete=atime,delete=ctime                              \
            --numeric-owner --owner=0 --group=0 --mode=go+u,go-w
 %.tar.xz:
+	@test -z '$(WORKTREE_WARN)' || echo                                        \
+	  '$(shell tput setaf 3)$(WORKTREE_WARN)$(shell tput sgr0)' 1>&2
 	@rm --recursive --force dist-tmp # Hard-code to prevent accidents
 	@mkdir --parents dist-tmp/$*
 	cp --parents $^ dist-tmp/$*
