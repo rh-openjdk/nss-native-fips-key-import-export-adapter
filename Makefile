@@ -14,12 +14,12 @@ DEVEL_PKGS    = nss nss-softokn
 LIB_DIR       = $(shell pkg-config --variable=libdir nss-softokn)
 SHARED_LIBS   = pthread softokn3 nss3
 STATIC_LIBS   = freebl
-SHR_CFLAGS    = -shared -fPIC -fvisibility=hidden -Wl,--exclude-libs,ALL       \
-                -DNAME_VER='"$(NAME_VER)"' $(addprefix -l,$(SHARED_LIBS))      \
+SHR_CFLAGS    = -shared -fPIC -fvisibility=hidden -DNAME_VER='"$(NAME_VER)"'   \
                 $(strip $(shell pkg-config --cflags $(DEVEL_PKGS)))            \
                 -Wpedantic -Wall -Wextra -Wconversion -Werror
 DBG_CFLAGS    = -Wno-error=unused-variable -Wno-error=unused-parameter -DDEBUG \
                 -O0 -g
+SHR_LDFLAGS   = -Wl,--exclude-libs,ALL $(addprefix -l,$(SHARED_LIBS))
 
 # https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 CLANG_FORMAT_STYLE = {                                                         \
@@ -54,10 +54,12 @@ endif
 
 .PHONY: release ## Build the library in RELEASE mode (default)
 release: BLD_CFLAGS = $(SHR_CFLAGS) $(CFLAGS)
+release: BLD_LDFLAGS = $(SHR_LDFLAGS) $(LDFLAGS)
 release: $(CLEAN_IF_PREVIOUS_BUILD_MODE_IS_DEBUG) $(OUTPUT)
 
 .PHONY: debug ## Build the library in DEBUG mode
 debug: BLD_CFLAGS = $(SHR_CFLAGS) $(DBG_CFLAGS) $(CFLAGS)
+debug: BLD_LDFLAGS = $(SHR_LDFLAGS) $(LDFLAGS)
 debug: CREATE_DBG_SENTINEL_IF_NEEDED = touch $(DBG_SENTINEL)
 debug: $(CLEAN_IF_PREVIOUS_BUILD_MODE_IS_RELEASE) $(OUTPUT)
 
@@ -74,7 +76,7 @@ $(BIN_DIR):
 
 $(OUTPUT): $(BIN_DIR) $(SRC_FILES)
 	@$(CREATE_DBG_SENTINEL_IF_NEEDED)
-	$(CC) $(BLD_CFLAGS) $(filter %.c, $+)                                      \
+	$(CC) $(BLD_CFLAGS) $(filter %.c, $+) $(BLD_LDFLAGS) \
 	      $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBS))) -o $@
 
 
