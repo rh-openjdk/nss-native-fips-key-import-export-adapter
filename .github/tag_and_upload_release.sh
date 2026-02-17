@@ -31,9 +31,9 @@ owner="$(basename "$(dirname "${remote_url}")")"
 repo="$(basename "${remote_url}" .git)"
 prev_version="$(git describe --abbrev=0)"
 body="
-### Contributors
+### All-Time Contributors
 
-@franferrax, @martinuy, @fitzsim
+@franferrax, @martinuy, @fitzsim, @gnu-andrew
 
 ### Changelog
 
