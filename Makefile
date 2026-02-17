@@ -18,7 +18,7 @@ SHR_CFLAGS    = -shared -fPIC -fvisibility=hidden -DNAME_VER='"$(NAME_VER)"'   \
                 $(strip $(shell pkg-config --cflags $(DEVEL_PKGS)))            \
                 -Wpedantic -Wall -Wextra -Wconversion -Werror
 DBG_CFLAGS    = -Wno-error=unused-variable -Wno-error=unused-parameter -DDEBUG \
-                -O0 -g
+                -fanalyzer -O0 -g
 SHR_LDFLAGS   = -Wl,--exclude-libs,ALL $(addprefix -l,$(SHARED_LIBS))
 
 # https://clang.llvm.org/docs/ClangFormatStyleOptions.html
