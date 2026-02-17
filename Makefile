@@ -14,6 +14,7 @@ DEVEL_PKGS    = nss nss-softokn
 LIB_DIR       = $(shell pkg-config --variable=libdir nss-softokn)
 SHARED_LIBS   = pthread softokn3 nss3
 STATIC_LIBS   = freebl
+STATIC_OBJS   = $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBS)))
 SHR_CFLAGS    = -shared -fPIC -fvisibility=hidden -DNAME_VER='"$(NAME_VER)"'   \
                 $(strip $(shell pkg-config --cflags $(DEVEL_PKGS)))            \
                 -Wpedantic -Wall -Wextra -Wconversion -Werror
@@ -35,6 +36,15 @@ CLANG_FORMAT_IGNORED_FILES = $(SRC_DIR)/nss_lowkey_imported.c                  \
 # Reasons for exclusion:
 #   nss_lowkey_imported.c  <- copy and pasted content from NSS
 #   sensitive_attributes.h <- this file is wrongly formatted
+
+# Terminal colors and formatting
+COL_SEP = $(shell printf "\x1E")
+ifneq ($(MAKE_TERMOUT),)
+  TXT_BOLD   := $(shell tput bold)
+  TXT_CYAN   := $(shell tput setaf 6)
+  TXT_YELLOW := $(shell tput setaf 3)
+  TXT_RESET  := $(shell tput sgr0)
+endif
 
 
 #
@@ -76,8 +86,7 @@ $(BIN_DIR):
 
 $(OUTPUT): $(BIN_DIR) $(SRC_FILES)
 	@$(CREATE_DBG_SENTINEL_IF_NEEDED)
-	$(CC) $(BLD_CFLAGS) $(filter %.c, $+) $(BLD_LDFLAGS) \
-	      $(addprefix $(LIB_DIR)/lib,$(addsuffix .a,$(STATIC_LIBS))) -o $@
+	$(CC) $(BLD_CFLAGS) $(filter %.c, $+) $(BLD_LDFLAGS) $(STATIC_OBJS) -o $@
 
 
 DIST_FILE = $(NAME)-$(VERSION).tar.xz
@@ -96,8 +105,10 @@ ifneq ($(wildcard ./.git),)
   # https://www.gnu.org/software/tar/manual/html_section/Date-input-formats.html
   SOURCE_EPOCH = $(shell git log -1 --format=tformat:@%ct)
   # Issue a warning when the repository contains uncommitted changes
-  _WARN_TEXT = creating a tarball with uncommitted changes (check "git status")
-  WORKTREE_WARN = $(if $(shell git status --porcelain),WARNING: $(_WARN_TEXT),)
+  _WARN_TEXT = $(TXT_BOLD)$(TXT_YELLOW)WARNING:$(TXT_RESET)                    \
+               $(TXT_YELLOW)creating a tarball with uncommitted changes (check \
+               the 'git status' output)$(TXT_RESET)
+  WORKTREE_WARN = $(if $(shell git status --porcelain),$(_WARN_TEXT),)
 else
   # Not in a git repository, fall-back to this file's mtime, please note that
   # this reproduces the same tarball from an extracted tarball. We can directly
@@ -110,8 +121,7 @@ TARFLAGS = --sort=name --format=posix --mtime=$(SOURCE_EPOCH)                  \
            --pax-option=delete=atime,delete=ctime                              \
            --numeric-owner --owner=0 --group=0 --mode=go+u,go-w
 %.tar.xz:
-	@test -z '$(WORKTREE_WARN)' || echo                                        \
-	  '$(shell tput setaf 3)$(WORKTREE_WARN)$(shell tput sgr0)' 1>&2
+	@test -z "$(WORKTREE_WARN)" || echo "$(WORKTREE_WARN)" 1>&2
 	@rm --recursive --force dist-tmp # Hard-code to prevent accidents
 	@mkdir --parents dist-tmp/$*
 	cp --parents $^ dist-tmp/$*
@@ -177,7 +187,7 @@ github-release: $(DIST_FILE)
 
 .PHONY: help ## Display this message
 help:
-	@echo '$(shell tput bold)Available make targets:$(shell tput sgr0)'
+	@echo '$(TXT_BOLD)Available make targets:$(TXT_RESET)'
 	@sed -ne 's/^\.PHONY:\s*\([a-zA-Z0-9_\-]*\)\s*##\s*\(.*\)/                 \
-	  $(shell tput setaf 6)\1$(shell tput sgr0)$(shell printf "\x1E")\2/p'     \
-	  $(MAKEFILE_LIST) | column -c2 -t -s$(shell printf "\x1E")
+	  $(TXT_CYAN)\1$(TXT_RESET)$(COL_SEP)\2/p' $(MAKEFILE_LIST) |              \
+	  column -c2 -t -s$(COL_SEP)
